@@ -49,7 +49,7 @@ namespace rs2
 
             return res > 0;
         }
-      
+
         /**
         * returns a list of all newly connected devices
         * \return            the list of all new connected devices
@@ -129,6 +129,21 @@ namespace rs2
         }
 
         /**
+        * create a static snapshot of all connected devices at the time of the call
+        * \return            the list of devices connected devices at the time of the call
+        */
+        device_list query_devices(int mask) const
+        {
+            rs2_error* e = nullptr;
+            std::shared_ptr<rs2_device_list> list(
+                rs2_query_devices_ex(_context.get(), mask, &e),
+                rs2_delete_device_list);
+            error::handle(e);
+
+            return device_list(list);
+        }
+
+        /**
          * @brief Generate a flat list of all available sensors from all RealSense devices
          * @return List of sensors
          */
@@ -192,13 +207,14 @@ namespace rs2
             rs2::error::handle(e);
         }
 
+        context(std::shared_ptr<rs2_context> ctx)
+            : _context(ctx)
+        {}
+        explicit operator std::shared_ptr<rs2_context>() { return _context; };
 protected:
         friend class rs2::pipeline;
         friend class rs2::device_hub;
 
-        context(std::shared_ptr<rs2_context> ctx)
-            : _context(ctx)
-        {}
         std::shared_ptr<rs2_context> _context;
     };
 
@@ -209,11 +225,10 @@ protected:
     {
     public:
         explicit device_hub(context ctx)
-            : _ctx(std::move(ctx))
         {
             rs2_error* e = nullptr;
             _device_hub = std::shared_ptr<rs2_device_hub>(
-                rs2_create_device_hub(_ctx._context.get(), &e),
+                rs2_create_device_hub(ctx._context.get(), &e),
                 rs2_delete_device_hub);
             error::handle(e);
         }
@@ -226,7 +241,7 @@ protected:
         {
             rs2_error* e = nullptr;
             std::shared_ptr<rs2_device> dev(
-                rs2_device_hub_wait_for_device(_ctx._context.get(), _device_hub.get(), &e),
+                rs2_device_hub_wait_for_device(_device_hub.get(), &e),
                 rs2_delete_device);
 
             error::handle(e);
@@ -247,8 +262,10 @@ protected:
             return res > 0 ? true : false;
 
         }
+
+        explicit operator std::shared_ptr<rs2_device_hub>() { return _device_hub; }
+        explicit device_hub(std::shared_ptr<rs2_device_hub> hub) : _device_hub(std::move(hub)) {}
     private:
-        context _ctx;
         std::shared_ptr<rs2_device_hub> _device_hub;
     };
 

@@ -9,21 +9,22 @@
 
 namespace rs2
 {
+
     class notification
     {
     public:
-        notification(rs2_notification* notification)
+        notification(rs2_notification* nt)
         {
             rs2_error* e = nullptr;
-            _description = rs2_get_notification_description(notification, &e);
+            _description = rs2_get_notification_description(nt, &e);
             error::handle(e);
-            _timestamp = rs2_get_notification_timestamp(notification, &e);
+            _timestamp = rs2_get_notification_timestamp(nt, &e);
             error::handle(e);
-            _severity = rs2_get_notification_severity(notification, &e);
+            _severity = rs2_get_notification_severity(nt, &e);
             error::handle(e);
-            _category = rs2_get_notification_category(notification, &e);
+            _category = rs2_get_notification_category(nt, &e);
             error::handle(e);
-            _serialized_data = rs2_get_notification_serialized_data(notification, &e);
+            _serialized_data = rs2_get_notification_serialized_data(nt, &e);
             error::handle(e);
         }
 
@@ -211,6 +212,8 @@ namespace rs2
             _options = other._options;
             return *this;
         }
+        // if operator= is ok, this should be ok too
+        options(const options& other) : _options(other._options) {}
 
         virtual ~options() = default;
    protected:
@@ -223,7 +226,6 @@ namespace rs2
            return *this;
        }
 
-       options(const options& other) : _options(other._options) {}
 
     private:
         rs2_options* _options;
@@ -349,7 +351,7 @@ namespace rs2
         */
         std::vector<stream_profile> get_stream_profiles() const
         {
-            std::vector<stream_profile> results;
+            std::vector<stream_profile> results{};
 
             rs2_error* e = nullptr;
             std::shared_ptr<rs2_stream_profile_list> list(
@@ -411,6 +413,12 @@ namespace rs2
             return extension;
         }
 
+        explicit sensor(std::shared_ptr<rs2_sensor> dev)
+            :options((rs2_options*)dev.get()), _sensor(dev)
+        {
+        }
+        explicit operator std::shared_ptr<rs2_sensor>() { return _sensor; }
+
     protected:
         friend context;
         friend device_list;
@@ -420,10 +428,7 @@ namespace rs2
 
         std::shared_ptr<rs2_sensor> _sensor;
 
-        explicit sensor(std::shared_ptr<rs2_sensor> dev)
-            :options((rs2_options*)dev.get()),  _sensor(dev)
-        {
-        }
+
     };
 
     inline bool operator==(const sensor& lhs, const sensor& rhs)
@@ -495,6 +500,7 @@ namespace rs2
         }
 
         operator bool() const { return _sensor.get() != nullptr; }
+        explicit depth_sensor(std::shared_ptr<rs2_sensor> dev) : depth_sensor(sensor(dev)) {}
     };
 
     class depth_stereo_sensor : public depth_sensor
