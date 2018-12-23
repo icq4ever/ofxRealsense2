@@ -26,6 +26,8 @@ vs:
 	ADDON_DLLS_TO_COPY  = dlls_to_copy
 
 linux64:
+	ADDON_LDFLAGS = ../../../addons/ofxRealsense2/libs/realsense2/lib/linux64/librealsense2.so
+
 linuxarmv6l:
 linuxarmv7l:
 msys2:
