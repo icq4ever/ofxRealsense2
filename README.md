@@ -13,7 +13,7 @@ This repos is openFrameworks addon fo [Intel® RealSense™ SDK 2.0](https://git
 ## TODO
 - [x] OSX support
 - [x] Windows support
-- [x] Linux support	- v2.17.0
+- [x] Linux support	- v2.17.0 updated
 - [x] add ci scripts
 - [ ] add postprocessing example
 - [ ] add bag file playback example
